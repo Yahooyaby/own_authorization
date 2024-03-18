@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\UserLoginRequest;
 use App\Http\Requests\UserStoreRequest;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
 use function Laravel\Prompts\password;
@@ -31,7 +33,7 @@ class UserController extends Controller
             'password' => Hash::make($request->password)
         ]);
         if($user){
-            auth('web')->login($user);
+            Auth::login($user);
         }
        return redirect()->route('home');
     }
@@ -41,24 +43,23 @@ class UserController extends Controller
         return view('authorize.login');
     }
 
-    public function logging(Request $request):RedirectResponse
+    public function logging(UserLoginRequest $request):RedirectResponse
     {
-        $data = $request->validate([
-            'email' => ['required','email'],
-            'password' => ['required']
-        ]);
-        if(auth('web')->attempt($data)){
+
+        if(Auth::attempt([
+            'email' => $request->email,
+            'password' =>  $request->password
+        ]))
+        {
            return redirect()->route('home');
         }
-
         return redirect()->route('login')
             ->withErrors(['email'=>'Пользователь не найден или данные введены неверно']);
     }
 
     public function logout():RedirectResponse
     {
-        auth('web')->logout();
-
+        Auth::logout();
         return redirect()->route('home');
     }
 }
